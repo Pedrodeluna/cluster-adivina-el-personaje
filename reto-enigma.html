@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reto de desciframiento</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #fafafa;
+            color: #000;
+            padding: 40px 20px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: #0f0f0f;
+                color: #f0f0f0;
+            }
+        }
+
+        .container {
+            max-width: 540px;
+            margin: 0 auto;
+        }
+
+        .header {
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .subtitle {
+                color: #aaa;
+            }
+        }
+
+        .stages {
+            display: grid;
+            gap: 20px;
+        }
+
+        .stage {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .stage.completed {
+            background: #fafafa;
+            border-color: #e0e0e0;
+        }
+
+        .stage.locked {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .stage {
+                background: #1a1a1a;
+                border-color: #333;
+            }
+
+            .stage.completed {
+                background: #0f0f0f;
+                border-color: #2a2a2a;
+            }
+        }
+
+        .stage-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .stage-number {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border: 1px solid #ddd;
+            border-radius: 50%;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .stage.completed .stage-number {
+            background: #4caf50;
+            border-color: #4caf50;
+            color: white;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .stage-number {
+                border-color: #444;
+            }
+
+            .stage.completed .stage-number {
+                border-color: #4caf50;
+            }
+        }
+
+        .stage-title {
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .stage.completed .stage-title {
+            color: #4caf50;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .stage.completed .stage-title {
+                color: #81c784;
+            }
+        }
+
+        .message-code {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            background: #f5f5f5;
+            border: 1px solid #e0e0e0;
+            padding: 12px;
+            word-break: break-all;
+            line-height: 1.6;
+            user-select: all;
+            margin-bottom: 16px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .message-code {
+                background: #0f0f0f;
+                border-color: #333;
+            }
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px 12px 10px 12px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            background: white;
+            color: #000;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #000;
+        }
+
+        input:disabled {
+            background: #f5f5f5;
+            color: #999;
+            cursor: not-allowed;
+        }
+
+        input::placeholder {
+            color: #ccc;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            input {
+                background: #0f0f0f;
+                border-color: #333;
+                color: #f0f0f0;
+            }
+
+            input:focus {
+                border-color: #666;
+            }
+
+            input:disabled {
+                background: #1a1a1a;
+                color: #666;
+            }
+
+            input::placeholder {
+                color: #555;
+            }
+        }
+
+        .check-mark {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #4caf50;
+            font-size: 18px;
+            display: none;
+        }
+
+        .check-mark.show {
+            display: block;
+        }
+
+        .error {
+            font-size: 12px;
+            color: #d32f2f;
+            margin-top: 6px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .error {
+                color: #ff6b6b;
+            }
+        }
+
+        .button {
+            margin-top: 12px;
+            padding: 9px 16px;
+            font-size: 13px;
+            font-weight: 500;
+            border: 1px solid #000;
+            background: white;
+            color: #000;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s ease;
+        }
+
+        .button:hover:not(:disabled) {
+            background: #f0f0f0;
+        }
+
+        .button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .button {
+                background: #1a1a1a;
+                border-color: #333;
+                color: #f0f0f0;
+            }
+
+            .button:hover:not(:disabled) {
+                background: #2a2a2a;
+            }
+        }
+
+        .completion {
+            display: none;
+            margin-top: 40px;
+            text-align: center;
+            padding: 32px 24px;
+            background: white;
+            border: 1px solid #4caf50;
+        }
+
+        .completion.show {
+            display: block;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .completion {
+                background: #1a1a1a;
+                border-color: #4caf50;
+            }
+        }
+
+        .completion h2 {
+            font-size: 20px;
+            color: #4caf50;
+            margin-bottom: 8px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .completion h2 {
+                color: #81c784;
+            }
+        }
+
+        .completion p {
+            font-size: 14px;
+            color: #666;
+            margin: 0;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .completion p {
+                color: #aaa;
+            }
+        }
+
+        .progress {
+            display: flex;
+            gap: 4px;
+            margin-top: 24px;
+            justify-content: center;
+        }
+
+        .progress-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #ddd;
+        }
+
+        .progress-dot.active {
+            background: #000;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .progress-dot {
+                background: #333;
+            }
+
+            .progress-dot.active {
+                background: #f0f0f0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>El cluster comprometido - @pedrodelunaH</h1>
+            <p class="subtitle">Se han interceptado 3 identidades del cluster. Están encriptadas en los mensajes. ¿Puedes identificar quiénes son?</p>
+        </div>
+
+        <div class="stages">
+            <!-- Stage 1 -->
+            <div class="stage" id="stage1">
+                <div class="stage-header">
+                    <div class="stage-number" id="num1">1</div>
+                    <div class="stage-title">Identidad encriptada: la de pruebas</div>
+                </div>
+                <div class="message-code">UEFCTE8gUk9PVF9S</div>
+                <div class="input-wrapper">
+                    <input type="text" id="answer1" placeholder="¿Quién es?" autocomplete="off">
+                    <div class="check-mark" id="check1">✓</div>
+                </div>
+                <div class="error" id="error1"></div>
+                <button class="button" onclick="verificar(1)">Verificar</button>
+            </div>
+
+            <!-- Stage 2 -->
+            <div class="stage locked" id="stage2">
+                <div class="stage-header">
+                    <div class="stage-number" id="num2">2</div>
+                    <div class="stage-title">Identidad encriptada: el próximo retador</div>
+                </div>
+                <div class="message-code">SREU9xXSTPFVNRFPQR1E9VQWURkVVJQEQQVUJQB=</div>
+                <div class="input-wrapper">
+                    <input type="text" id="answer2" placeholder="¿Quién es?" autocomplete="off">
+                    <div class="check-mark" id="check2">✓</div>
+                </div>
+                <div class="error" id="error2"></div>
+                <button class="button" onclick="verificar(2)">Verificar</button>
+            </div>
+
+            <!-- Stage 3 -->
+            <div class="stage locked" id="stage3">
+                <div class="stage-header">
+                    <div class="stage-number" id="num3">3</div>
+                    <div class="stage-title">Identidad encriptada: va que esta es fácil ya</div>
+                </div>
+                <div class="message-code">UQQkU09RxHPVRUUVK1JRRLFFUUUkgg=====</div>
+                <div class="input-wrapper">
+                    <input type="text" id="answer3" placeholder="¿Quién es?" autocomplete="off">
+                    <div class="check-mark" id="check3">✓</div>
+                </div>
+                <div class="error" id="error3"></div>
+                <button class="button" onclick="verificar(3)">Verificar</button>
+            </div>
+        </div>
+
+        <div class="completion" id="completion">
+            <h2>¡Cluster identificado!</h2>
+            <p>Conseguiste identificar a los 3 miembros del cluster comprometido.</p>
+            <div class="progress">
+                <div class="progress-dot active"></div>
+                <div class="progress-dot active"></div>
+                <div class="progress-dot active"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SALT = 'cluster_';
+        const hashesEsperados = {
+            1: 'ae00544ad83aa97afde2bccae5f37be45fa13cc48a464ee980df434f94f428ff',
+            2: '8feb057b54d9964242f67bb111f789d2bd8d3789aa81216b21af5f91760ed4d1',
+            3: 'f68f32a1c75cb6aaf7438fac19dd49a284017a45fc333c3e3c6a0d8606fd53ef'
+        };
+
+        async function calcularSHA256(mensaje) {
+            const encoder = new TextEncoder();
+            const datos = encoder.encode(SALT + mensaje);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', datos);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        async function verificar(numero) {
+            const input = document.getElementById(`answer${numero}`);
+            const respuesta = input.value.trim();
+            const error = document.getElementById(`error${numero}`);
+            const stage = document.getElementById(`stage${numero}`);
+            const checkMark = document.getElementById(`check${numero}`);
+
+            if (!respuesta) {
+                error.textContent = "Escribe una respuesta.";
+                error.classList.add('show');
+                return;
+            }
+
+            try {
+                const hashRespuesta = await calcularSHA256(respuesta.toUpperCase());
+                const hashEsperado = hashesEsperados[numero];
+
+                if (hashRespuesta === hashEsperado) {
+                    error.classList.remove('show');
+                    
+                    // Marcar como completado
+                    stage.classList.add('completed');
+                    input.disabled = true;
+                    checkMark.classList.add('show');
+                    document.querySelector(`#stage${numero} .button`).disabled = true;
+                    
+                    // Desbloquear siguiente
+                    if (numero < 3) {
+                        const nextStage = document.getElementById(`stage${numero + 1}`);
+                        nextStage.classList.remove('locked');
+                        document.getElementById(`answer${numero + 1}`).focus();
+                    } else {
+                        // Mostrar completación
+                        document.getElementById('completion').classList.add('show');
+                    }
+                } else {
+                    error.textContent = "Respuesta incorrecta. Intenta de nuevo.";
+                    error.classList.add('show');
+                }
+            } catch (err) {
+                error.textContent = "Error al verificar.";
+                error.classList.add('show');
+            }
+        }
+
+        // Permitir Enter en los inputs
+        for (let i = 1; i <= 3; i++) {
+            document.getElementById(`answer${i}`).addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    verificar(i);
+                }
+            });
+
+            document.getElementById(`answer${i}`).addEventListener('input', function() {
+                document.getElementById(`error${i}`).classList.remove('show');
+            });
+        }
+    </script>
+</body>
+</html>
